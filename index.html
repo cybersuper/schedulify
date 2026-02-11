@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCHEDULIFY v47</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --black: #000000;
+            --prussian-blue: #14213d;
+            --orange: #fca311;
+            --alabaster-grey: #e5e5e5;
+            --white: #ffffff;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--alabaster-grey); 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+            user-select: none; 
+            color: var(--black); 
+        }
+
+        /* SIDEBAR */
+        .sidebar { 
+            width: 320px; 
+            background: var(--white); 
+            border-right: 4px solid var(--black); 
+            padding: 1.5rem; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1rem; 
+            z-index: 100; 
+            box-sizing: border-box;
+        }
+
+        .instruction-card {
+            background: var(--alabaster-grey);
+            border: 3px solid var(--black);
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 4px 4px 0px var(--black);
+        }
+
+        .instruction-card h2 {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--prussian-blue);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .instruction-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .instruction-list li {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .bullet {
+            color: var(--orange);
+            font-weight: 900;
+        }
+
+        /* BUTTONS */
+        button { 
+            padding: 0.8rem; 
+            border: 3px solid var(--black); 
+            border-radius: 0px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            transition: 0.1s; 
+            font-family: 'Inter'; 
+            font-size: 0.75rem; 
+        }
+
+        .btn-main { background: var(--orange); color: var(--black); }
+        .btn-main:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--black); }
+        .btn-sec { background: var(--white); color: var(--black); }
+        .btn-sec:hover { background: var(--alabaster-grey); }
+        .btn-data { background: var(--prussian-blue); color: var(--white); }
+        .btn-data:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--orange); }
+
+        /* GRID STYLES */
+        .main-content { flex-grow: 1; padding: 2rem; overflow: auto; display: flex; justify-content: center; align-items: flex-start; }
+        #capture { background: var(--white); padding: 20px; border: 4px solid var(--black); box-shadow: 12px 12px 0px var(--black); }
+
+        .timetable-grid { 
+            display: grid; 
+            grid-template-columns: 80px repeat(7, 160px); 
+            grid-template-rows: 60px;
+            grid-auto-rows: 40px; 
+            background: var(--white); 
+            position: relative;
+        }
+
+        .header-cell { 
+            background: var(--prussian-blue); color: var(--white); 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: 900; font-size: 0.85rem; text-transform: uppercase;
+            grid-row: 1; border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .time-label { 
+            grid-column: 1; display: flex; align-items: center; justify-content: center; 
+            font-size: 0.75rem; font-weight: 900; border-right: 3px solid var(--black); 
+            background: var(--white); 
+        }
+
+        .grid-cell { border-right: 1px solid var(--alabaster-grey); border-bottom: 1px solid var(--alabaster-grey); }
+
+        /* COURSE CARDS */
+        .course-card { 
+            background: var(--prussian-blue); color: var(--white); 
+            margin: 3px; padding: 8px; border-radius: 0px; z-index: 20; 
+            position: relative; border: 3px solid var(--black); cursor: grab; 
+            display: flex; flex-direction: column; justify-content: flex-start;
+            overflow: hidden;
+        }
+        
+        .card-name { 
+            font-weight: 700; font-size: 0.85rem; line-height: 1.2; 
+            word-wrap: break-word; overflow: hidden; margin-bottom: 4px;
+        }
+
+        .card-time { 
+            font-size: 0.6rem; font-weight: 900; background: var(--orange); 
+            color: var(--black); padding: 2px 5px; width: fit-content; 
+            border: 1.5px solid var(--black); margin-top: auto; white-space: nowrap;
+        }
+        
+        .pop-input {
+            position: absolute; z-index: 500; background: var(--white); border: 4px solid var(--orange);
+            padding: 5px; font-family: 'Inter'; font-weight: 900; outline: none;
+            box-shadow: 5px 5px 0px var(--black);
+        }
+
+        .resizer { position: absolute; bottom: 0; left: 0; right: 0; height: 10px; cursor: ns-resize; }
+        .del-btn { 
+            position: absolute; top: -5px; right: -5px; background: #ff4d4d; color: white; 
+            border: 2px solid var(--black); width: 20px; height: 20px; font-size: 10px; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            opacity: 0; font-weight: 900; transition: opacity 0.2s;
+        }
+        .course-card:hover .del-btn { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="color:var(--prussian-blue); margin:0; font-size: 1.8rem; font-weight: 900; letter-spacing: -1px;">SCHEDULIFY</h1>
+            <div style="height: 6px; width: 40px; background: var(--orange); margin-top: 4px; border: 2px solid var(--black);"></div>
+        </div>
+        <button onclick="toggleLang()" style="padding: 4px 8px; font-size: 0.6rem; border-width: 2px;" id="langBtn">FR</button>
+    </div>
+    
+    <div class="instruction-card">
+        <h2 id="instrTitle">How to Use</h2>
+        <ul class="instruction-list" id="instrList">
+            <li><span class="bullet">▶</span> Click & drag on empty cells to create a block.</li>
+            <li><span class="bullet">▶</span> Click a block's text to rename it.</li>
+            <li><span class="bullet">▶</span> Drag blocks to move them around.</li>
+            <li><span class="bullet">▶</span> Use the bottom edge to resize duration.</li>
+        </ul>
+    </div>
+
+    <button class="btn-sec" onclick="toggleMode()" id="modeBtn">MODE: 24H</button>
+    
+    <div style="margin-top: auto; display:flex; flex-direction:column; gap:12px;">
+        <button class="btn-main" onclick="exportPNG()" id="btnPng">Download Image</button>
+        <button class="btn-data" onclick="exportCSV()" id="btnCsv">Export to CSV</button>
+        <button class="btn-sec" style="font-size: 0.65rem; border-width: 2px;" onclick="resetAll()" id="btnReset">Clear Everything</button>
+    </div>
+</div>
+
+<div class="main-content">
+    <div id="capture">
+        <div class="timetable-grid" id="grid">
+            <div class="header-cell" style="grid-column: 1" data-key="TIME">TIME</div>
+            <div class="header-cell" style="grid-column: 2" data-key="MON">MON</div>
+            <div class="header-cell" style="grid-column: 3" data-key="TUE">TUE</div>
+            <div class="header-cell" style="grid-column: 4" data-key="WED">WED</div>
+            <div class="header-cell" style="grid-column: 5" data-key="THU">THU</div>
+            <div class="header-cell" style="grid-column: 6" data-key="FRI">FRI</div>
+            <div class="header-cell" style="grid-column: 7" data-key="SAT">SAT</div>
+            <div class="header-cell" style="grid-column: 8" data-key="SUN">SUN</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const i18n = {
+        en: {
+            MON: "MON", TUE: "TUE", WED: "WED", THU: "THU", FRI: "FRI", SAT: "SAT", SUN: "SUN", TIME: "TIME",
+            instrTitle: "How to Use",
+            instr: [
+                "Click & drag on empty cells to create a block.",
+                "Click a block's text to rename it.",
+                "Drag blocks to move them around.",
+                "Use the bottom edge to resize duration."
+            ],
+            btnPng: "Download Image",
+            btnCsv: "Export to CSV",
+            btnReset: "Clear Everything",
+            confirm: "Clear all data?",
+            newClass: "New Class"
+        },
+        fr: {
+            MON: "LUN", TUE: "MAR", WED: "MER", THU: "JEU", FRI: "VEN", SAT: "SAM", SUN: "DIM", TIME: "HEURE",
+            instrTitle: "Mode d'emploi",
+            instr: [
+                "Cliquez et glissez pour créer un bloc.",
+                "Cliquez sur le texte pour renommer.",
+                "Faites glisser les blocs pour les déplacer.",
+                "Étirez le bord inférieur pour la durée."
+            ],
+            btnPng: "Télécharger l'image",
+            btnCsv: "Exporter en CSV",
+            btnReset: "Tout effacer",
+            confirm: "Effacer toutes les données ?",
+            newClass: "Nouveau cours"
+        }
+    };
+
+    let curLang = localStorage.getItem('sched_lang') || 'en';
+    let is24H = JSON.parse(localStorage.getItem('uniflow_24h')) ?? true;
+    let courses = JSON.parse(localStorage.getItem('uniflow_data')) || [];
+    let state = { isDrawing: false, isDragging: false, isResizing: false, activeItem: null, startR: null, isTyping: false };
+    const DAYS = ["", "", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+    function toggleLang() {
+        curLang = curLang === 'en' ? 'fr' : 'en';
+        localStorage.setItem('sched_lang', curLang);
+        applyLang();
+    }
+
+    function applyLang() {
+        const t = i18n[curLang];
+        document.getElementById('langBtn').innerText = curLang === 'en' ? 'FR' : 'EN';
+        document.getElementById('instrTitle').innerText = t.instrTitle;
+        document.getElementById('instrList').innerHTML = t.instr.map(s => `<li><span class="bullet">▶</span> ${s}</li>`).join('');
+        document.getElementById('btnPng').innerText = t.btnPng;
+        document.getElementById('btnCsv').innerText = t.btnCsv;
+        document.getElementById('btnReset').innerText = t.btnReset;
+        document.querySelectorAll('.header-cell').forEach(el => {
+            if(el.dataset.key) el.innerText = t[el.dataset.key];
+        });
+    }
+
+    function init() {
+        const grid = document.getElementById('grid');
+        grid.querySelectorAll('.time-label, .grid-cell, .course-card').forEach(e => e.remove());
+        document.getElementById('modeBtn').innerText = is24H ? 'MODE: 24H' : 'MODE: 12H';
+        
+        for (let h = 8; h <= 21; h++) {
+            const r = (h - 8) * 2 + 2; 
+            const lbl = document.createElement('div');
+            lbl.className = 'time-label';
+            lbl.style.gridRow = `${r} / span 2`;
+            lbl.dataset.row = r;
+            if(h < 21) lbl.style.borderBottom = "2px solid var(--black)";
+            lbl.innerText = formatLabel(h);
+            grid.appendChild(lbl);
+            
+            for (let d = 2; d <= 8; d++) {
+                [r, r+1].forEach(rowIdx => {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = rowIdx;
+                    if(rowIdx % 2 !== 0) cell.style.borderBottom = "1px dashed var(--alabaster-grey)";
+                    cell.style.gridRow = rowIdx; cell.style.gridColumn = d;
+                    cell.onmousedown = (e) => { if(!state.isTyping) startAction(e, rowIdx, d, 'draw'); };
+                    grid.appendChild(cell);
+                });
+            }
+        }
+        applyLang();
+        render();
+    }
+
+    function startAction(e, r, d, type, item = null) {
+        if (state.isTyping) return;
+        if (type === 'draw') {
+            state.isDrawing = true; state.startR = r;
+            state.activeItem = { id: 'c-'+Date.now(), name: i18n[curLang].newClass, r: r, c: d, span: 1 };
+        } else {
+            state.activeItem = item;
+            state.isDragging = type === 'drag';
+            state.isResizing = type === 'resize';
+            courses = courses.filter(c => c.id !== item.id);
+        }
+        render();
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        if (!state.activeItem || state.isTyping) return;
+        const grid = document.getElementById('grid');
+        const rect = grid.getBoundingClientRect();
+        const currentRow = Math.max(2, Math.floor((e.clientY - rect.top - 60) / 40) + 2);
+        const currentCol = Math.max(2, Math.min(8, Math.floor((e.clientX - rect.left - 80) / 160) + 2));
+
+        if (state.isDrawing) {
+            state.activeItem.r = Math.min(state.startR, currentRow);
+            state.activeItem.span = Math.max(1, Math.abs(currentRow - state.startR) + 1);
+        } else if (state.isDragging) {
+            state.activeItem.r = currentRow;
+            state.activeItem.c = currentCol;
+        } else if (state.isResizing) {
+            state.activeItem.span = Math.max(1, currentRow - state.activeItem.r + 1);
+        }
+        render();
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (state.activeItem) { courses.push(state.activeItem); save(); if(state.isDrawing) triggerInput(state.activeItem.id); }
+        state.isDrawing = state.isDragging = state.isResizing = false;
+        state.activeItem = null;
+        render();
+    });
+
+    function render() {
+        document.querySelectorAll('.course-card').forEach(e => e.remove());
+        const list = state.activeItem ? [...courses, state.activeItem] : courses;
+        list.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'course-card';
+            card.id = `card-${item.id}`;
+            card.style.gridRow = `${item.r} / span ${item.span}`;
+            card.style.gridColumn = item.c;
+            card.innerHTML = `
+                <div class="del-btn" onmousedown="event.stopPropagation(); deleteItem('${item.id}')">✕</div>
+                <div class="card-name">${item.name}</div>
+                <div class="card-time">${idxToT(item.r-2)} - ${idxToT(item.r+item.span-2)}</div>
+                <div class="resizer"></div>
+            `;
+            card.onmousedown = (e) => {
+                if (state.isTyping) return;
+                e.stopPropagation();
+                if (e.target.className === 'card-name') { triggerInput(item.id); return; }
+                if (e.target.className === 'resizer') startAction(e, null, null, 'resize', item);
+                else startAction(e, null, null, 'drag', item);
+            };
+            document.getElementById('grid').appendChild(card);
+        });
+    }
+
+    function triggerInput(id) {
+        state.isTyping = true;
+        const card = document.getElementById(`card-${id}`);
+        const item = courses.find(c => c.id === id);
+        const input = document.createElement('input');
+        input.className = 'pop-input';
+        input.value = item.name;
+        input.style.gridRow = card.style.gridRow;
+        input.style.gridColumn = card.style.gridColumn;
+        input.style.width = "134px"; input.style.height = "24px"; input.style.margin = "8px 5px";
+        document.getElementById('grid').appendChild(input);
+        setTimeout(() => { input.focus(); input.select(); }, 10);
+        const closeInput = () => { item.name = input.value || i18n[curLang].newClass; input.remove(); state.isTyping = false; save(); render(); };
+        input.onkeydown = (e) => { if(e.key === 'Enter') closeInput(); };
+        input.onblur = closeInput;
+    }
+
+    function exportPNG() {
+        const lastRow = courses.length > 0 ? Math.max(...courses.map(c => c.r + c.span)) : 28;
+        const allCells = document.querySelectorAll('.grid-cell, .time-label');
+        allCells.forEach(cell => { if (parseInt(cell.dataset.row || cell.style.gridRowStart) > lastRow) cell.style.display = 'none'; });
+
+        html2canvas(document.getElementById('capture')).then(c => {
+            const a=document.createElement('a'); a.download='Schedule.png'; a.href=c.toDataURL(); a.click();
+            allCells.forEach(cell => cell.style.display = '');
+        });
+    }
+
+    function exportCSV() {
+        let csv = "Course,Day,Start Time,End Time\n";
+        courses.forEach(c => { csv += `"${c.name}",${DAYS[c.c]},${idxToT(c.r-2)},${idxToT(c.r+c.span-2)}\n`; });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Schedulify_Data.csv';
+        a.click();
+    }
+
+    function deleteItem(id) { courses = courses.filter(c => c.id !== id); save(); render(); }
+    function save() { localStorage.setItem('uniflow_data', JSON.stringify(courses)); }
+    function toggleMode() { is24H = !is24H; localStorage.setItem('uniflow_24h', is24H); init(); }
+    function formatLabel(h) { if(is24H) return h+":00"; return (h%12||12)+(h>=12?' PM':' AM'); }
+    function idxToT(i) { 
+        let h = Math.floor(i/2)+8, m = (i%2===0)?"00":"30";
+        if(is24H) return `${h}:${m}`;
+        return (h%12||12)+":"+m+(h>=12?' PM':' AM');
+    }
+    function resetAll() { if(confirm(i18n[curLang].confirm)) { courses=[]; localStorage.clear(); location.reload(); }}
+    
+    init();
+</script>
+</body>
+</html>
