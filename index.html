@@ -3,360 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCHEDULIFY v47</title>
+    <title>SCHEDULIFY Pro v71</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --black: #000000;
-            --prussian-blue: #14213d;
-            --orange: #fca311;
-            --alabaster-grey: #e5e5e5;
-            --white: #ffffff;
+            --black: #000000; --prussian-blue: #14213d; --orange: #fca311;
+            --alabaster-grey: #e5e5e5; --white: #ffffff; --red: #ff4d4d;
         }
         
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--alabaster-grey); 
-            margin: 0; 
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
-            user-select: none; 
-            color: var(--black); 
+        body { font-family: 'Inter', sans-serif; background: var(--alabaster-grey); margin: 0; display: flex; height: 100vh; overflow: hidden; user-select: none; color: var(--black); }
+        
+        .sidebar { width: 340px; background: var(--white); border-right: 4px solid var(--black); padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; z-index: 100; box-sizing: border-box; overflow-y: auto; }
+        
+        .edit-panel { 
+            background: var(--prussian-blue); color: var(--white); border: 4px solid var(--black); 
+            padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 10px;
+            box-shadow: 6px 6px 0px var(--orange);
         }
+        .edit-panel.active { display: flex; }
+        .edit-panel h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; color: var(--orange); letter-spacing: 1px; }
 
-        /* SIDEBAR */
-        .sidebar { 
-            width: 320px; 
-            background: var(--white); 
-            border-right: 4px solid var(--black); 
-            padding: 1.5rem; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 1rem; 
-            z-index: 100; 
-            box-sizing: border-box;
+        .control-group { background: var(--white); border: 3px solid var(--black); padding: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: 4px 4px 0px var(--black); }
+        .label-sm { font-size: 0.6rem; font-weight: 900; text-transform: uppercase; color: var(--prussian-blue); }
+
+        input, select, button { 
+            padding: 0.6rem; border: 2.5px solid var(--black); border-radius: 0px; 
+            font-weight: 900; cursor: pointer; font-family: 'Inter'; font-size: 0.7rem; 
         }
+        .edit-panel input, .edit-panel select { background: var(--white); color: var(--black); width: 100%; box-sizing: border-box; }
 
-        .instruction-card {
-            background: var(--alabaster-grey);
-            border: 3px solid var(--black);
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 4px 4px 0px var(--black);
-        }
+        .btn-main { background: var(--orange); color: var(--black); text-transform: uppercase; }
+        .btn-sec { background: var(--white); text-transform: uppercase; }
+        .btn-sec.active { background: var(--black); color: var(--white); }
 
-        .instruction-card h2 {
-            margin: 0 0 10px 0;
-            font-size: 0.9rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: var(--prussian-blue);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .instruction-list {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-            font-size: 0.75rem;
-            font-weight: 700;
-            line-height: 1.5;
-        }
-
-        .instruction-list li {
-            margin-bottom: 8px;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .bullet {
-            color: var(--orange);
-            font-weight: 900;
-        }
-
-        /* BUTTONS */
-        button { 
-            padding: 0.8rem; 
-            border: 3px solid var(--black); 
-            border-radius: 0px; 
-            font-weight: 900; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            transition: 0.1s; 
-            font-family: 'Inter'; 
-            font-size: 0.75rem; 
-        }
-
-        .btn-main { background: var(--orange); color: var(--black); }
-        .btn-main:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--black); }
-        .btn-sec { background: var(--white); color: var(--black); }
-        .btn-sec:hover { background: var(--alabaster-grey); }
-        .btn-data { background: var(--prussian-blue); color: var(--white); }
-        .btn-data:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--orange); }
-
-        /* GRID STYLES */
         .main-content { flex-grow: 1; padding: 2rem; overflow: auto; display: flex; justify-content: center; align-items: flex-start; }
         #capture { background: var(--white); padding: 20px; border: 4px solid var(--black); box-shadow: 12px 12px 0px var(--black); }
-
+        
         .timetable-grid { 
             display: grid; 
             grid-template-columns: 80px repeat(7, 160px); 
-            grid-template-rows: 60px;
-            grid-auto-rows: 40px; 
-            background: var(--white); 
-            position: relative;
+            grid-template-rows: 50px; 
+            grid-auto-rows: 20px; 
+            background: var(--white); position: relative;
         }
 
-        .header-cell { 
-            background: var(--prussian-blue); color: var(--white); 
-            display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; font-size: 0.85rem; text-transform: uppercase;
-            grid-row: 1; border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .time-label { 
-            grid-column: 1; display: flex; align-items: center; justify-content: center; 
-            font-size: 0.75rem; font-weight: 900; border-right: 3px solid var(--black); 
-            background: var(--white); 
-        }
-
+        .header-cell { background: var(--prussian-blue); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; grid-row: 1; border: 1px solid rgba(255,255,255,0.1); text-transform: uppercase; }
+        .time-label { grid-column: 1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; border-right: 3px solid var(--black); background: var(--white); }
         .grid-cell { border-right: 1px solid var(--alabaster-grey); border-bottom: 1px solid var(--alabaster-grey); }
 
-        /* COURSE CARDS */
         .course-card { 
-            background: var(--prussian-blue); color: var(--white); 
-            margin: 3px; padding: 8px; border-radius: 0px; z-index: 20; 
-            position: relative; border: 3px solid var(--black); cursor: grab; 
-            display: flex; flex-direction: column; justify-content: flex-start;
-            overflow: hidden;
+            background: var(--prussian-blue); color: var(--white); margin: 2px; padding: 6px; 
+            z-index: 20; position: relative; border: 2.5px solid var(--black); cursor: grab; 
+            display: flex; flex-direction: column; overflow: hidden;
         }
+        .course-card.selected { border-color: var(--orange); box-shadow: 0 0 10px var(--orange); z-index: 30; }
+        .card-name { font-weight: 900; font-size: 0.75rem; line-height: 1; margin-bottom: 2px; }
+        .card-meta { font-size: 0.6rem; opacity: 0.8; font-weight: 400; line-height: 1.2; }
+        .card-time { font-size: 0.55rem; font-weight: 900; background: var(--orange); color: var(--black); padding: 1px 4px; width: fit-content; border: 1px solid var(--black); margin-top: auto; }
         
-        .card-name { 
-            font-weight: 700; font-size: 0.85rem; line-height: 1.2; 
-            word-wrap: break-word; overflow: hidden; margin-bottom: 4px;
-        }
-
-        .card-time { 
-            font-size: 0.6rem; font-weight: 900; background: var(--orange); 
-            color: var(--black); padding: 2px 5px; width: fit-content; 
-            border: 1.5px solid var(--black); margin-top: auto; white-space: nowrap;
-        }
-        
-        .pop-input {
-            position: absolute; z-index: 500; background: var(--white); border: 4px solid var(--orange);
-            padding: 5px; font-family: 'Inter'; font-weight: 900; outline: none;
-            box-shadow: 5px 5px 0px var(--black);
-        }
-
+        .type-tag { font-size: 0.5rem; font-weight: 900; background: var(--white); color: var(--black); padding: 1px 4px; border-radius: 2px; margin-right: 4px; text-transform: uppercase; }
         .resizer { position: absolute; bottom: 0; left: 0; right: 0; height: 10px; cursor: ns-resize; }
-        .del-btn { 
-            position: absolute; top: -5px; right: -5px; background: #ff4d4d; color: white; 
-            border: 2px solid var(--black); width: 20px; height: 20px; font-size: 10px; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; 
-            opacity: 0; font-weight: 900; transition: opacity 0.2s;
-        }
-        .course-card:hover .del-btn { opacity: 1; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <h1 style="color:var(--prussian-blue); margin:0; font-size: 1.8rem; font-weight: 900; letter-spacing: -1px;">SCHEDULIFY</h1>
-            <div style="height: 6px; width: 40px; background: var(--orange); margin-top: 4px; border: 2px solid var(--black);"></div>
-        </div>
-        <button onclick="toggleLang()" style="padding: 4px 8px; font-size: 0.6rem; border-width: 2px;" id="langBtn">FR</button>
-    </div>
+    <h1 style="color:var(--prussian-blue); margin:0; font-size: 1.5rem; font-weight: 900; letter-spacing: -1px;">SCHEDULIFY</h1>
     
-    <div class="instruction-card">
-        <h2 id="instrTitle">How to Use</h2>
-        <ul class="instruction-list" id="instrList">
-            <li><span class="bullet">▶</span> Click & drag on empty cells to create a block.</li>
-            <li><span class="bullet">▶</span> Click a block's text to rename it.</li>
-            <li><span class="bullet">▶</span> Drag blocks to move them around.</li>
-            <li><span class="bullet">▶</span> Use the bottom edge to resize duration.</li>
-        </ul>
+    <div class="control-group">
+        <span class="label-sm">Drag Precision (Snap)</span>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+            <button id="p30" class="btn-sec" onclick="setPrecision(30)">30m</button>
+            <button id="p15" class="btn-sec" onclick="setPrecision(15)">15m</button>
+        </div>
     </div>
 
-    <button class="btn-sec" onclick="toggleMode()" id="modeBtn">MODE: 24H</button>
+    <div class="control-group">
+        <span class="label-sm">Start Day</span>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+            <button id="sMon" class="btn-sec" onclick="setWeekStart('MON')">Mon</button>
+            <button id="sSun" class="btn-sec" onclick="setWeekStart('SUN')">Sun</button>
+        </div>
+    </div>
+
+    <div id="editPanel" class="edit-panel">
+        <h3>Details Board</h3>
+        <input type="text" id="editName" placeholder="Course Name" oninput="manualUpdate()">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <select id="editType" onchange="manualUpdate()">
+                <option value="Lec">Lec</option>
+                <option value="Lab">Lab</option>
+                <option value="Sem">Sem</option>
+            </select>
+            <input type="text" id="editLoc" placeholder="Room/Location" oninput="manualUpdate()">
+        </div>
+        
+        <input type="text" id="editProf" placeholder="Professor" oninput="manualUpdate()">
+
+        <select id="editDay" onchange="manualUpdate()">
+            <option value="Monday">Monday</option><option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option><option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <div><span class="label-sm" style="color:white">Start</span><input type="time" id="editStart" onchange="manualUpdate()"></div>
+            <div><span class="label-sm" style="color:white">End</span><input type="time" id="editEnd" onchange="manualUpdate()"></div>
+        </div>
+        <button class="btn-main" style="background:var(--red); color:white; border-color:white; margin-top:5px;" onclick="deleteActive()">Delete Card</button>
+    </div>
     
-    <div style="margin-top: auto; display:flex; flex-direction:column; gap:12px;">
-        <button class="btn-main" onclick="exportPNG()" id="btnPng">Download Image</button>
-        <button class="btn-data" onclick="exportCSV()" id="btnCsv">Export to CSV</button>
-        <button class="btn-sec" style="font-size: 0.65rem; border-width: 2px;" onclick="resetAll()" id="btnReset">Clear Everything</button>
+    <div style="margin-top: auto; display:flex; flex-direction:column; gap:10px;">
+        <button class="btn-main" onclick="exportPNG()">Download PNG</button>
+        <button class="btn-sec" style="font-size: 0.6rem;" onclick="resetAll()">Reset All</button>
     </div>
 </div>
 
 <div class="main-content">
     <div id="capture">
-        <div class="timetable-grid" id="grid">
-            <div class="header-cell" style="grid-column: 1" data-key="TIME">TIME</div>
-            <div class="header-cell" style="grid-column: 2" data-key="MON">MON</div>
-            <div class="header-cell" style="grid-column: 3" data-key="TUE">TUE</div>
-            <div class="header-cell" style="grid-column: 4" data-key="WED">WED</div>
-            <div class="header-cell" style="grid-column: 5" data-key="THU">THU</div>
-            <div class="header-cell" style="grid-column: 6" data-key="FRI">FRI</div>
-            <div class="header-cell" style="grid-column: 7" data-key="SAT">SAT</div>
-            <div class="header-cell" style="grid-column: 8" data-key="SUN">SUN</div>
-        </div>
+        <div class="timetable-grid" id="grid"></div>
     </div>
 </div>
 
 <script>
-    const i18n = {
-        en: {
-            MON: "MON", TUE: "TUE", WED: "WED", THU: "THU", FRI: "FRI", SAT: "SAT", SUN: "SUN", TIME: "TIME",
-            instrTitle: "How to Use",
-            instr: [
-                "Click & drag on empty cells to create a block.",
-                "Click a block's text to rename it.",
-                "Drag blocks to move them around.",
-                "Use the bottom edge to resize duration."
-            ],
-            btnPng: "Download Image",
-            btnCsv: "Export to CSV",
-            btnReset: "Clear Everything",
-            confirm: "Clear all data?",
-            newClass: "New Class"
-        },
-        fr: {
-            MON: "LUN", TUE: "MAR", WED: "MER", THU: "JEU", FRI: "VEN", SAT: "SAM", SUN: "DIM", TIME: "HEURE",
-            instrTitle: "Mode d'emploi",
-            instr: [
-                "Cliquez et glissez pour créer un bloc.",
-                "Cliquez sur le texte pour renommer.",
-                "Faites glisser les blocs pour les déplacer.",
-                "Étirez le bord inférieur pour la durée."
-            ],
-            btnPng: "Télécharger l'image",
-            btnCsv: "Exporter en CSV",
-            btnReset: "Tout effacer",
-            confirm: "Effacer toutes les données ?",
-            newClass: "Nouveau cours"
-        }
+    let settings = JSON.parse(localStorage.getItem('sched_v71_set')) || { interval: 30, weekStart: 'MON' };
+    let courses = JSON.parse(localStorage.getItem('sched_v71_dat')) || [];
+    let state = { isDrawing: false, isDragging: false, isResizing: false, activeItem: null, startR: null, selectedId: null };
+    
+    const DAY_ORDER = {
+        MON: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        SUN: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     };
 
-    let curLang = localStorage.getItem('sched_lang') || 'en';
-    let is24H = JSON.parse(localStorage.getItem('uniflow_24h')) ?? true;
-    let courses = JSON.parse(localStorage.getItem('uniflow_data')) || [];
-    let state = { isDrawing: false, isDragging: false, isResizing: false, activeItem: null, startR: null, isTyping: false };
-    const DAYS = ["", "", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-    function toggleLang() {
-        curLang = curLang === 'en' ? 'fr' : 'en';
-        localStorage.setItem('sched_lang', curLang);
-        applyLang();
-    }
-
-    function applyLang() {
-        const t = i18n[curLang];
-        document.getElementById('langBtn').innerText = curLang === 'en' ? 'FR' : 'EN';
-        document.getElementById('instrTitle').innerText = t.instrTitle;
-        document.getElementById('instrList').innerHTML = t.instr.map(s => `<li><span class="bullet">▶</span> ${s}</li>`).join('');
-        document.getElementById('btnPng').innerText = t.btnPng;
-        document.getElementById('btnCsv').innerText = t.btnCsv;
-        document.getElementById('btnReset').innerText = t.btnReset;
-        document.querySelectorAll('.header-cell').forEach(el => {
-            if(el.dataset.key) el.innerText = t[el.dataset.key];
-        });
-    }
+    function setPrecision(v) { settings.interval = v; save(); init(); }
+    function setWeekStart(d) { settings.weekStart = d; save(); init(); }
+    function save() { localStorage.setItem('sched_v71_set', JSON.stringify(settings)); localStorage.setItem('sched_v71_dat', JSON.stringify(courses)); }
 
     function init() {
         const grid = document.getElementById('grid');
-        grid.querySelectorAll('.time-label, .grid-cell, .course-card').forEach(e => e.remove());
-        document.getElementById('modeBtn').innerText = is24H ? 'MODE: 24H' : 'MODE: 12H';
+        grid.innerHTML = '';
+        const currentDays = DAY_ORDER[settings.weekStart];
         
+        document.getElementById('p30').className = settings.interval === 30 ? 'btn-sec active' : 'btn-sec';
+        document.getElementById('p15').className = settings.interval === 15 ? 'btn-sec active' : 'btn-sec';
+        document.getElementById('sMon').className = settings.weekStart === 'MON' ? 'btn-sec active' : 'btn-sec';
+        document.getElementById('sSun').className = settings.weekStart === 'SUN' ? 'btn-sec active' : 'btn-sec';
+
+        grid.appendChild(createCell('TIME', 'header-cell', 1, 1));
+        currentDays.forEach((day, i) => grid.appendChild(createCell(day.substring(0,3), 'header-cell', 1, i + 2)));
+
         for (let h = 8; h <= 21; h++) {
-            const r = (h - 8) * 2 + 2; 
-            const lbl = document.createElement('div');
-            lbl.className = 'time-label';
-            lbl.style.gridRow = `${r} / span 2`;
-            lbl.dataset.row = r;
-            if(h < 21) lbl.style.borderBottom = "2px solid var(--black)";
-            lbl.innerText = formatLabel(h);
-            grid.appendChild(lbl);
+            const startRow = (h - 8) * 4 + 2; 
+            const tLbl = createCell(h + ":00", 'time-label', `${startRow} / span 4`, 1);
+            if(h < 21) tLbl.style.borderBottom = "2px solid var(--black)";
+            grid.appendChild(tLbl);
             
-            for (let d = 2; d <= 8; d++) {
-                [r, r+1].forEach(rowIdx => {
-                    const cell = document.createElement('div');
-                    cell.className = 'grid-cell';
-                    cell.dataset.row = rowIdx;
-                    if(rowIdx % 2 !== 0) cell.style.borderBottom = "1px dashed var(--alabaster-grey)";
-                    cell.style.gridRow = rowIdx; cell.style.gridColumn = d;
-                    cell.onmousedown = (e) => { if(!state.isTyping) startAction(e, rowIdx, d, 'draw'); };
+            currentDays.forEach((dayName, dayIdx) => {
+                for(let s = 0; s < 4; s++) {
+                    const rIdx = startRow + s;
+                    const cell = createCell('', 'grid-cell', rIdx, dayIdx + 2);
+                    if(s === 1) cell.style.borderBottom = "1px dashed #eee"; 
+                    cell.onmousedown = (e) => startAction(e, rIdx, dayName, 'draw');
                     grid.appendChild(cell);
-                });
-            }
+                }
+            });
         }
-        applyLang();
         render();
     }
 
-    function startAction(e, r, d, type, item = null) {
-        if (state.isTyping) return;
+    function createCell(txt, cls, r, c) {
+        const d = document.createElement('div'); d.className = cls; d.innerText = txt; d.style.gridRow = r; d.style.gridColumn = c; return d;
+    }
+
+    function startAction(e, r, dayName, type, item = null) {
+        const snap = settings.interval / 15; 
+        const snappedR = Math.floor((r - 2) / snap) * snap + 2;
+
         if (type === 'draw') {
-            state.isDrawing = true; state.startR = r;
-            state.activeItem = { id: 'c-'+Date.now(), name: i18n[curLang].newClass, r: r, c: d, span: 1 };
+            state.isDrawing = true; state.startR = snappedR;
+            state.activeItem = { id: 'c-'+Date.now(), name: 'New Course', r: snappedR, day: dayName, span: snap, type: 'Lec', loc: '', prof: '' };
         } else {
             state.activeItem = item;
-            state.isDragging = type === 'drag';
-            state.isResizing = type === 'resize';
+            state.isDragging = type === 'drag'; state.isResizing = type === 'resize';
             courses = courses.filter(c => c.id !== item.id);
         }
-        render();
+        state.selectedId = state.activeItem.id;
+        updateSidebar(); render();
     }
 
     document.addEventListener('mousemove', (e) => {
-        if (!state.activeItem || state.isTyping) return;
+        if (!state.activeItem) return;
         const grid = document.getElementById('grid');
         const rect = grid.getBoundingClientRect();
-        const currentRow = Math.max(2, Math.floor((e.clientY - rect.top - 60) / 40) + 2);
-        const currentCol = Math.max(2, Math.min(8, Math.floor((e.clientX - rect.left - 80) / 160) + 2));
+        const snap = settings.interval / 15;
+        
+        const rawRow = Math.floor((e.clientY - rect.top - 50) / 20);
+        const snappedRow = Math.max(0, Math.floor(rawRow / snap) * snap) + 2;
+        const colIdx = Math.max(0, Math.min(6, Math.floor((e.clientX - rect.left - 80) / 160)));
+        const currentDay = DAY_ORDER[settings.weekStart][colIdx];
 
         if (state.isDrawing) {
-            state.activeItem.r = Math.min(state.startR, currentRow);
-            state.activeItem.span = Math.max(1, Math.abs(currentRow - state.startR) + 1);
+            state.activeItem.r = Math.min(state.startR, snappedRow);
+            state.activeItem.span = Math.max(snap, Math.abs(snappedRow - state.startR) + snap);
         } else if (state.isDragging) {
-            state.activeItem.r = currentRow;
-            state.activeItem.c = currentCol;
+            state.activeItem.r = snappedRow; state.activeItem.day = currentDay;
         } else if (state.isResizing) {
-            state.activeItem.span = Math.max(1, currentRow - state.activeItem.r + 1);
+            state.activeItem.span = Math.max(snap, snappedRow - state.activeItem.r + snap);
         }
-        render();
+        updateSidebar(); render();
     });
 
     document.addEventListener('mouseup', () => {
-        if (state.activeItem) { courses.push(state.activeItem); save(); if(state.isDrawing) triggerInput(state.activeItem.id); }
-        state.isDrawing = state.isDragging = state.isResizing = false;
-        state.activeItem = null;
+        if (state.activeItem) { courses.push(state.activeItem); save(); }
+        state.isDrawing = state.isDragging = state.isResizing = false; state.activeItem = null;
         render();
     });
 
     function render() {
         document.querySelectorAll('.course-card').forEach(e => e.remove());
         const list = state.activeItem ? [...courses, state.activeItem] : courses;
+        const currentDays = DAY_ORDER[settings.weekStart];
+
         list.forEach(item => {
+            const col = currentDays.indexOf(item.day) + 2;
+            if (col < 2) return;
             const card = document.createElement('div');
-            card.className = 'course-card';
-            card.id = `card-${item.id}`;
+            card.className = `course-card ${state.selectedId === item.id ? 'selected' : ''}`;
             card.style.gridRow = `${item.r} / span ${item.span}`;
-            card.style.gridColumn = item.c;
+            card.style.gridColumn = col;
+
+            const typeLabel = item.type ? `<span class="type-tag">${item.type}</span>` : '';
+
             card.innerHTML = `
-                <div class="del-btn" onmousedown="event.stopPropagation(); deleteItem('${item.id}')">✕</div>
-                <div class="card-name">${item.name}</div>
+                <div class="card-name">${typeLabel}${item.name}</div>
+                <div class="card-meta">${item.loc}</div>
+                <div class="card-meta" style="font-weight:700">${item.prof}</div>
                 <div class="card-time">${idxToT(item.r-2)} - ${idxToT(item.r+item.span-2)}</div>
                 <div class="resizer"></div>
             `;
             card.onmousedown = (e) => {
-                if (state.isTyping) return;
                 e.stopPropagation();
-                if (e.target.className === 'card-name') { triggerInput(item.id); return; }
                 if (e.target.className === 'resizer') startAction(e, null, null, 'resize', item);
                 else startAction(e, null, null, 'drag', item);
             };
@@ -364,55 +253,53 @@
         });
     }
 
-    function triggerInput(id) {
-        state.isTyping = true;
-        const card = document.getElementById(`card-${id}`);
-        const item = courses.find(c => c.id === id);
-        const input = document.createElement('input');
-        input.className = 'pop-input';
-        input.value = item.name;
-        input.style.gridRow = card.style.gridRow;
-        input.style.gridColumn = card.style.gridColumn;
-        input.style.width = "134px"; input.style.height = "24px"; input.style.margin = "8px 5px";
-        document.getElementById('grid').appendChild(input);
-        setTimeout(() => { input.focus(); input.select(); }, 10);
-        const closeInput = () => { item.name = input.value || i18n[curLang].newClass; input.remove(); state.isTyping = false; save(); render(); };
-        input.onkeydown = (e) => { if(e.key === 'Enter') closeInput(); };
-        input.onblur = closeInput;
+    function updateSidebar() {
+        const item = state.activeItem || courses.find(c => c.id === state.selectedId);
+        if (item) {
+            document.getElementById('editPanel').classList.add('active');
+            document.getElementById('editName').value = item.name;
+            document.getElementById('editDay').value = item.day;
+            document.getElementById('editType').value = item.type || 'Lec';
+            document.getElementById('editLoc').value = item.loc || '';
+            document.getElementById('editProf').value = item.prof || '';
+            document.getElementById('editStart').value = idxToT(item.r - 2);
+            document.getElementById('editEnd').value = idxToT(item.r + item.span - 2);
+        }
     }
 
-    function exportPNG() {
-        const lastRow = courses.length > 0 ? Math.max(...courses.map(c => c.r + c.span)) : 28;
-        const allCells = document.querySelectorAll('.grid-cell, .time-label');
-        allCells.forEach(cell => { if (parseInt(cell.dataset.row || cell.style.gridRowStart) > lastRow) cell.style.display = 'none'; });
-
-        html2canvas(document.getElementById('capture')).then(c => {
-            const a=document.createElement('a'); a.download='Schedule.png'; a.href=c.toDataURL(); a.click();
-            allCells.forEach(cell => cell.style.display = '');
-        });
+    function manualUpdate() {
+        const item = courses.find(c => c.id === state.selectedId);
+        if (!item) return;
+        item.name = document.getElementById('editName').value;
+        item.day = document.getElementById('editDay').value;
+        item.type = document.getElementById('editType').value;
+        item.loc = document.getElementById('editLoc').value;
+        item.prof = document.getElementById('editProf').value;
+        
+        const s = document.getElementById('editStart').value;
+        const e = document.getElementById('editEnd').value;
+        if(s && e) {
+            item.r = tToIdx(s) + 2;
+            item.span = tToIdx(e) - tToIdx(s);
+        }
+        save(); render();
     }
 
-    function exportCSV() {
-        let csv = "Course,Day,Start Time,End Time\n";
-        courses.forEach(c => { csv += `"${c.name}",${DAYS[c.c]},${idxToT(c.r-2)},${idxToT(c.r+c.span-2)}\n`; });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'Schedulify_Data.csv';
-        a.click();
+    function idxToT(i) {
+        const mins = i * 15;
+        const h = Math.floor(mins / 60) + 8;
+        const m = (mins % 60).toString().padStart(2, '0');
+        return `${h.toString().padStart(2,'0')}:${m}`;
     }
 
-    function deleteItem(id) { courses = courses.filter(c => c.id !== id); save(); render(); }
-    function save() { localStorage.setItem('uniflow_data', JSON.stringify(courses)); }
-    function toggleMode() { is24H = !is24H; localStorage.setItem('uniflow_24h', is24H); init(); }
-    function formatLabel(h) { if(is24H) return h+":00"; return (h%12||12)+(h>=12?' PM':' AM'); }
-    function idxToT(i) { 
-        let h = Math.floor(i/2)+8, m = (i%2===0)?"00":"30";
-        if(is24H) return `${h}:${m}`;
-        return (h%12||12)+":"+m+(h>=12?' PM':' AM');
+    function tToIdx(t) {
+        const [h, m] = t.split(':').map(Number);
+        return ((h * 60 + m) - (8 * 60)) / 15;
     }
-    function resetAll() { if(confirm(i18n[curLang].confirm)) { courses=[]; localStorage.clear(); location.reload(); }}
-    
+
+    function deleteActive() { courses = courses.filter(c => c.id !== state.selectedId); state.selectedId = null; save(); init(); }
+    function exportPNG() { html2canvas(document.getElementById('capture')).then(c => { const a=document.createElement('a'); a.download='Schedule.png'; a.href=c.toDataURL(); a.click(); }); }
+    function resetAll() { if(confirm("Wipe all data?")) { courses=[]; localStorage.clear(); location.reload(); }}
     init();
 </script>
 </body>
